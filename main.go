@@ -48,6 +48,19 @@ func handleFileUpload(c echo.Context) error {
 
 	defer src.Close()
 
+	// read first 512 bytes to detect content type
+	buf := make([]byte, 512)
+	src.Read(buf)
+	contentType := http.DetectContentType(buf)
+
+	src.Seek(0, 0)
+
+	// allow only PNG
+	if contentType != "image/png" {
+		log.Println("Unsupported file type:", contentType)
+		return c.String(http.StatusUnsupportedMediaType, "only PNG allowed")
+	}
+
 	// create directory for uploaded file
 	os.MkdirAll("uploads", os.ModePerm)
 
